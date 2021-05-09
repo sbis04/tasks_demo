@@ -6,8 +6,10 @@ workflows:
     scripts:
       - name: Run tests
         script: ./gradlew test
+
       - name: Build debug apk
         script: ./gradlew assembleDebug
+
     artifacts:
       - app/build/**/outputs/**/*.apk
     publishing:
@@ -18,28 +20,31 @@ workflows:
     name: Native Android
     max_build_duration: 60
     scripts:
-      - |
-        # launching android emulator
-        emulator -avd emulator > /dev/null 2>&1 &
-      - |
-        # set up debug keystore
-        rm -f ~/.android/debug.keystore
-        keytool -genkeypair \
-          -alias androiddebugkey \
-          -keypass android \
-          -keystore ~/.android/debug.keystore \
-          -storepass android \
-          -dname 'CN=Android Debug,O=Android,C=US' \
-          -keyalg 'RSA' \
-          -keysize 2048 \
-          -validity 10000
-      - |
-        # run tests
-        ./gradlew test
-        ./gradlew connectedAndroidTest
-      - |
-        # build debug apk
+      - name: Launching android emulator
+        script: emulator -avd emulator > /dev/null 2>&1 &
+
+      - name: Set up debug keystore
+        script: |
+          rm -f ~/.android/debug.keystore
+          keytool -genkeypair \
+            -alias androiddebugkey \
+            -keypass android \
+            -keystore ~/.android/debug.keystore \
+            -storepass android \
+            -dname 'CN=Android Debug,O=Android,C=US' \
+            -keyalg 'RSA' \
+            -keysize 2048 \
+            -validity 10000
+
+      - name: Run tests
+        script: |
+          ./gradlew test
+          ./gradlew connectedAndroidTest
+
+      - name: Build debug apk
+        script:
         ./gradlew assembleDebug
+
     artifacts:
       - app/build/**/outputs/**/*.apk
     publishing:
@@ -56,25 +61,27 @@ workflows:
         CM_KEY_ALIAS_PASSWORD: Encrypted(Z0FBQUFBQmU4WXc5RlFTc0hqTk5FY3NCNmhjZ1VfYi1GNlJRWkE4M0g3SG5teG5DaklkNUdnQ1NPWnc5QnJHZmVkR2h1Rk14eWJGYk41UXdVXzFob2l5eDFyR1hSV0VaWUE9PQ==)
         CM_KEY_ALIAS_USERNAME: app
     scripts:
-      - |
-        # launching android emulator
-        emulator -avd emulator > /dev/null 2>&1 &
-      - |
-        # set up release keystore
-        echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.keystore
-        cat >> "$FCI_BUILD_DIR/key.properties" <<EOF
-        storePassword=$CM_KEYSTORE_PASSWORD
-        keyPassword=$CM_KEY_ALIAS_PASSWORD
-        keyAlias=$CM_KEY_ALIAS_USERNAME
-        storeFile=/tmp/keystore.keystore
-        EOF
-      - |
-        # run tests
-        ./gradlew test
-        ./gradlew connectedAndroidTest
-      - |
-        # build release apk
-        ./gradlew assembleRelease
+      - name: Launching android emulator
+        script: emulator -avd emulator > /dev/null 2>&1 &
+
+      - name: Set up release keystore
+        script: |
+          echo $CM_KEYSTORE | base64 --decode > /tmp/keystore.keystore
+          cat >> "$FCI_BUILD_DIR/key.properties" <<EOF
+          storePassword=$CM_KEYSTORE_PASSWORD
+          keyPassword=$CM_KEY_ALIAS_PASSWORD
+          keyAlias=$CM_KEY_ALIAS_USERNAME
+          storeFile=/tmp/keystore.keystore
+          EOF
+
+      - name: Run tests
+        script: |
+          ./gradlew test
+          ./gradlew connectedAndroidTest
+
+      - name: Build release apk
+        script: ./gradlew assembleRelease
+
     artifacts:
       - app/build/**/outputs/**/*.apk
     publishing:
