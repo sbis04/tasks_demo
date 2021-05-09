@@ -42,8 +42,7 @@ workflows:
           ./gradlew connectedAndroidTest
 
       - name: Build debug apk
-        script:
-        ./gradlew assembleDebug
+        script: ./gradlew assembleDebug
 
     artifacts:
       - app/build/**/outputs/**/*.apk
